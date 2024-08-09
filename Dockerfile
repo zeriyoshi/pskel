@@ -46,10 +46,12 @@ RUN if test -f "/etc/debian_version"; then \
         cd - && \
         docker-php-source delete && \
 		apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y "llvm" "clang" && \
+		export CC="clang" && \
+		export CXX="clang++" && \
         docker-php-source extract && \
         cd "/usr/src/php" && \
 		  ./buildconf --force && \
-          CC="clang" CXX="clang++" CFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=memory" ./configure \
+          CFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=memory" ./configure \
               --includedir="/usr/local/include/clang-msan-php" --program-prefix="clang-msan-" \
               --disable-cgi --disable-all --disable-fpm --enable-cli \
               --enable-mysqlnd --enable-pdo --with-pdo-mysql --with-pdo-sqlite \
@@ -64,7 +66,7 @@ RUN if test -f "/etc/debian_version"; then \
         docker-php-source extract && \
         cd "/usr/src/php" && \
 		  ./buildconf --force && \
-          CC="clang" CXX="clang++" CFLAGS="-fsanitize=address -fno-sanitize-recover -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=address" ./configure \
+          CFLAGS="-fsanitize=address -fno-sanitize-recover -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=address" ./configure \
               --includedir="/usr/local/include/clang-asan-php" --program-prefix="clang-asan-" \
               --disable-cgi --disable-all --disable-fpm --enable-cli \
               --enable-mysqlnd --enable-pdo --with-pdo-mysql --with-pdo-sqlite \
@@ -79,7 +81,7 @@ RUN if test -f "/etc/debian_version"; then \
         docker-php-source extract && \
         cd "/usr/src/php" && \
 		  ./buildconf --force && \
-          CC="clang" CXX="clang++" CFLAGS="-fsanitize=undefined -fno-sanitize-recover -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined" ./configure \
+          CFLAGS="-fsanitize=undefined -fno-sanitize-recover -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined" ./configure \
               --includedir="/usr/local/include/clang-ubsan-php" --program-prefix="clang-ubsan-" \
               --disable-cgi --disable-all --disable-fpm --enable-cli \
               --enable-mysqlnd --enable-pdo --with-pdo-mysql --with-pdo-sqlite \
@@ -90,6 +92,8 @@ RUN if test -f "/etc/debian_version"; then \
           make -j$(nproc) && \
           make install && \
         cd - && \
+		unset CC && \
+		unset CXX && \
         docker-php-source delete; \
       fi; \
     elif test -f "/etc/alpine-release"; then \
