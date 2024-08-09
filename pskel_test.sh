@@ -68,7 +68,7 @@ if test "${TEST_EXTENSION_MSAN}" != ""; then
   if type "clang-msan-php" > /dev/null 2>&1; then
     cd "${PSKEL_WORKDIR}"
     clang-msan-phpize
-    CC="clang" CXX="clang++" CFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=memory" ./configure --with-php-config="$(which clang-msan-php-config)"
+    CLANG_VER="$(ls /usr/bin/clang-* 2>/dev/null | grep -oP 'clang-\K\d+' | sort -rn | head -n1)" CC="clang-${CLANG_VER}" CXX="clang++-${CLANG_VER}" CFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=memory" ./configure --with-php-config="$(which clang-msan-php-config)"
     make clean
     CFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC ${CFLAGS}" CPPFLAGS="-fsanitize=memory -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=memory" make -j"$(nproc)"
     TEST_PHP_ARGS="--show-diff -q --msan" make test
@@ -84,7 +84,7 @@ if test "${TEST_EXTENSION_ASAN}" != ""; then
   if type "clang-asan-php" > /dev/null 2>&1; then
     cd "${PSKEL_WORKDIR}"
     clang-asan-phpize
-    CC="clang" CXX="clang++" CFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=address" ./configure --with-php-config="$(which clang-asan-php-config)"
+    CLANG_VER="$(ls /usr/bin/clang-* 2>/dev/null | grep -oP 'clang-\K\d+' | sort -rn | head -n1)" CC="clang-${CLANG_VER}" CXX="clang++-${CLANG_VER}" CFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=address" ./configure --with-php-config="$(which clang-asan-php-config)"
     make clean
     CFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC ${CFLAGS}" CPPFLAGS="-fsanitize=address -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=address" make -j"$(nproc)"
     TEST_PHP_ARGS="--show-diff -q --asan" make test
@@ -100,7 +100,7 @@ if test "${TEST_EXTENSION_UBSAN}" != ""; then
   if type "clang-ubsan-php" > /dev/null 2>&1; then
     cd "${PSKEL_WORKDIR}"
     clang-ubsan-phpize
-    CC="clang" CXX="clang++" CFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=undefined" ./configure --with-php-config="$(which clang-ubsan-php-config)"
+    CLANG_VER="$(ls /usr/bin/clang-* 2>/dev/null | grep -oP 'clang-\K\d+' | sort -rn | head -n1)" CC="clang-${CLANG_VER}" CXX="clang++-${CLANG_VER}" CFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC" CPPFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=undefined" ./configure --with-php-config="$(which clang-ubsan-php-config)"
     make clean
     CFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC ${CFLAGS}" CPPFLAGS="-fsanitize=undefined -DZEND_TRACK_ARENA_ALLOC ${CPPFLAGS}" LDFLAGS="-fsanitize=undefined" make -j"$(nproc)"
     TEST_PHP_ARGS="--show-diff -q" make test
