@@ -84,6 +84,7 @@ jobs:
         run: sudo apt-get install -y lcov
       - name: Merge coverages
         run: |
+          find ext/ -type f
           LCOV_FILES=$(find ext/ -name "lcov.info" -type f)
 
           if test -z "${LCOV_FILES}"; then
