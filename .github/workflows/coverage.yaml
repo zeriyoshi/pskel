@@ -42,7 +42,7 @@ jobs:
           path: ${{ github.workspace }}/ext/lcov.info
   Coverage:
     needs: [Linux]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -57,29 +57,29 @@ jobs:
       - name: Merge coverages
         run: |
           LCOV_FILES=$(find coverage-artifacts -name "lcov.info" -type f)
-          
-          if [ -z "$LCOV_FILES" ]; then
+
+          if test -z "${LCOV_FILES}"; then
             echo "No lcov.info files found in the artifacts!"
             exit 1
           fi
-          
+
           CMD="lcov"
           CMD+=" --ignore-errors format"
-          for LCOV_FILE in $LCOV_FILES; do
-            echo "Adding coverage file: $LCOV_FILE"
-            CMD+=" -a $LCOV_FILE"
+          for LCOV_FILE in ${LCOV_FILES}; do
+            echo "Adding coverage file: ${LCOV_FILE}"
+            CMD+=" -a ${LCOV_FILE}"
           done
           CMD+=" -o lcov.info"
-          
-          echo "Executing: $CMD"
-          eval $CMD
-          
-          if [ ! -f "lcov.info" ]; then
+
+          echo "Executing: ${CMD}"
+          eval "${CMD}"
+
+          if test ! -f "lcov.info"; then
             echo "Failed to generate merged lcov.info file!"
             exit 1
           fi
-          
-          echo "Successfully merged $(echo $LCOV_FILES | wc -w) coverage files."
+
+          echo "Successfully merged $(echo ${LCOV_FILES} | wc -w) coverage files."
       - name: Report coverage
         uses: k1LoW/octocov-action@73d561f65d59e66899ed5c87e4621a913b5d5c20 # v1.5.0
         with:
@@ -91,16 +91,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: "coverage-html"
   deploy:
     if: github.ref == 'refs/heads/main'
+    needs: Coverage
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: Coverage
+    runs-on: ubuntu-24.04
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
