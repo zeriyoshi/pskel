@@ -88,6 +88,7 @@ jobs:
       - name: Generate HTML coverage report
         run: |
           sudo mv "ext" "/ext"
+          sudo chmod -R a+rw "/ext"
           genhtml "lcov.info" --output-directory "coverage-html"
       - name: Setup Pages
         uses: actions/configure-pages@v5
