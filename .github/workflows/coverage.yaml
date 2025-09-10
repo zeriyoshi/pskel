@@ -84,7 +84,7 @@ jobs:
         run: sudo apt-get install -y lcov
       - name: Merge coverages
         run: |
-          LCOV_FILES=$(find /ext -name "lcov.info" -type f)
+          LCOV_FILES=$(find ext/ -name "lcov.info" -type f)
 
           if test -z "${LCOV_FILES}"; then
             echo "No lcov.info files found in the artifacts!"
