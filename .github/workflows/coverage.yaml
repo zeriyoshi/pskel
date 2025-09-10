@@ -122,7 +122,7 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: "coverage-html"
-  Deploy:
+  deploy:
     if: github.ref == 'refs/heads/main'
     needs: coverage
     environment:

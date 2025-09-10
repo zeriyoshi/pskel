@@ -1,6 +1,6 @@
 coverage:
   paths:
-    - /ext/lcov.info
+    - ../lcov.info
   acceptable: current >= 60%
 testExecutionTime:
   if: false
