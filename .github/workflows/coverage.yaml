@@ -14,49 +14,77 @@ on:
       - synchronize
       - reopened
 jobs:
-  Linux:
+  init:
+    runs-on: ubuntu-24.04
+    outputs:
+      needs-init: ${{ steps.check.outputs.needs-init }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Check if initialization is needed
+        id: check
+        run: |
+          if test -f "ext/.gitkeep" && test "$(cat "ext/.gitkeep")" = "pskel_uninitialized"; then
+            echo "needs-init=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs-init=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Initialize extension
+        if: steps.check.outputs.needs-init == 'true'
+        run: |
+          docker compose run -v"$(pwd)/ext:/ext" --rm shell pskel init example
+      - name: Upload initialized extension
+        if: steps.check.outputs.needs-init == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: initialized-ext-coverage
+          path: ext/
+          retention-days: 1
+  linux:
     strategy:
       matrix:
         runs-on: ['ubuntu-24.04', 'ubuntu-24.04-arm']
         version: ['8.4']
         type: ['cli', 'zts']
         distro: ['trixie']
+    needs: init
     runs-on: ${{ matrix.runs-on }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
-      - name: Setup buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Build container
         run: |
           docker compose build --pull --no-cache --build-arg IMAGE="php" --build-arg TAG="${{ matrix.version }}-${{ matrix.type }}-${{ matrix.distro }}"
       - name: Test with gcov
         run: |
           docker compose run -v "$(pwd)/ext:/ext" --rm shell pskel coverage
-      - name: Upload coverage to artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.runs-on }}-${{ matrix.version }}-${{ matrix.type }}-${{ matrix.distro }}
-          path: ${{ github.workspace }}/ext/lcov.info
-  Coverage:
-    needs: [Linux]
+  coverage:
+    needs: [linux, init]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
+      - name: Download initialized extension
+        if: needs.init.outputs.needs-init == 'true'
+        uses: actions/download-artifact@v5
+        with:
+          name: initialized-ext-coverage
+          path: ext/
       - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
-          path: coverage-artifacts
+          path: /ext
       - name: Install lcov
         run: sudo apt-get install -y lcov
       - name: Merge coverages
         run: |
-          LCOV_FILES=$(find coverage-artifacts -name "lcov.info" -type f)
+          LCOV_FILES=$(find /ext -name "lcov.info" -type f)
 
           if test -z "${LCOV_FILES}"; then
             echo "No lcov.info files found in the artifacts!"
@@ -87,19 +115,16 @@ jobs:
           config: ".github/octocov.yml"
       - name: Generate HTML coverage report
         run: |
-          sudo mv "ext" "/ext"
-          sudo chmod -R a+rw "/ext"
-          sudo ls -alh "/ext"
-          genhtml "lcov.info" --output-directory "coverage-html"
+          genhtml "lcov.info" --output-directory "coverage-html" --prefix "/"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: "coverage-html"
-  deploy:
+  Deploy:
     if: github.ref == 'refs/heads/main'
-    needs: Coverage
+    needs: coverage
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
